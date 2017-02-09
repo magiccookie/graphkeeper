@@ -5,39 +5,30 @@
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer :all]
-            [clojure.edn :as edn]
+            [graphkeeper.edn :as edn]
             [cheshire.core :as json]))
-
-(defn read-edn [s]
-  (edn/read-string s))
-
-(defn print-edn [col]
-  (prn-str col))
 
 ;;
 ;; Routes
 ;;
 
 (defroutes app-routes
-  (GET "/" [] "<h1>Hello World</h1>")
-  (GET "/text" [request]
-       (println "GET query: " request)
-       (r/response (pr-str "just a text")))
-
-  (route/resources "/" {:root ""}))
+  (GET "/" [] (r/resource-response "index.html" {:root "public"}))
+  (route/resources "/" {:root "public"})
+  (route/not-found "Page not found"))
 
 (defroutes rest-routes
-  (GET "/api" [request]
-       (println "GET query: " request)
-       (r/response {:somekey "somevalue"})))
+  (GET "/api" []
+       (r/response {:somekey "somevalue"}))
+
+  (POST "/api" [request]
+        (println "POST query: " request)
+        (r/response request)))
 
 (defroutes query-routes
   (POST "/query" [request]
-        (println "POST query: " (read-edn request))
-        (r/response (str (read-edn request)))))
-
-(defroutes not-found
-  (route/not-found "<h1>Page not found</h1>"))
+        (println "POST query: " request)
+        (r/response (str (edn/read-edn request)))))
 
 ;;
 ;; Custom middleware
@@ -82,5 +73,4 @@
 (def app
   (routes (-> rest-routes (wrap-routes wrap-rest))
           (-> query-routes (wrap-routes wrap-edn))
-          (-> app-routes (wrap-routes wrap-app))
-          (-> not-found (wrap-routes wrap-app))))
+          (-> app-routes (wrap-routes wrap-app))))

@@ -1,0 +1,40 @@
+<html>
+    <head>
+        <title>Dummy edn console</title>
+    </head>
+    <body>
+        <h1>Dummy edn console</h1>
+        <form id="form">
+            <label>edn query</label>
+            <input id="input" type="text">
+            <button>send</button>
+        </form>
+    </body>
+
+    <script type="text/javascript">
+      var input = document.getElementById("input");
+      var form = document.getElementById("form");
+
+     function sendEdn(query) {
+         var xhr = new XMLHttpRequest();
+         xhr.open('POST', 'query');
+         xhr.setRequestHeader('Content-Type', 'application/edn');
+         xhr.onload = function() {
+             if (xhr.status === 200 && xhr.responseText) {
+                 console.log("response: " + xhr.responseText);
+             }
+             else if (xhr.status !== 200) {
+                 console.log('returned status: ' + xhr.status);
+             }
+         };
+         xhr.send(query);
+     }
+
+     form.addEventListener("submit", function(e) {
+               e.preventDefault();
+               sendEdn(input.value);
+         /* console.log(input.value);*/
+               input.value = "";
+     })
+    </script>
+</html>
