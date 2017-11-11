@@ -5,4 +5,7 @@
   (edn/read-string s))
 
 (defn convert-to-edn [col]
-  (prn-str col))
+  (str col))
+
+(defn to-cypher [col]
+  (str "MATCH n RETURN n;"))
