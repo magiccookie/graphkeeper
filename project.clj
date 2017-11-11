@@ -7,10 +7,11 @@
                  [com.taoensso/timbre "4.8.0"]
                  [compojure "1.5.2"]
                  [ring "1.5.1"]
-                 [ring/ring-defaults "0.2.2"]
+                 [ring/ring-defaults "0.2.3"]
                  [ring/ring-json "0.4.0"]
-                 [ring-cors "0.1.8"]
-                 [cheshire "5.6.3"]
+                 [ring-cors "0.1.9"]
+                 [fogus/ring-edn "0.3.0"]
+                 [cheshire "5.7.0"]
                  [magiccookie/neocons "3.2.0-SNAPSHOT"]]
   :main ^:skip-aot graphkeeper.cli
   :target-path "target/%s"

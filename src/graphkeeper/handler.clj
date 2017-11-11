@@ -2,7 +2,8 @@
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [ring.util.response :as r]
-            [ring.middleware.json :refer [wrap-json-response]]
+            [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
+            [ring.middleware.edn :refer [wrap-edn-params]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer :all]
             [graphkeeper.edn :as edn]
@@ -21,14 +22,30 @@
   (GET "/api" []
        (r/response {:somekey "somevalue"}))
 
-  (POST "/api" [request]
+  (POST "/api" request
         (println "POST query: " request)
-        (r/response request)))
+        (r/response (:body request))))
+
+(defn edn-query-handler [data & [status]]
+  {:status (or status 200)
+   :headers {"Content-Type" "application/edn"}
+   :body (pr-str data)})
+
+(defroutes edn-route
+  (GET "/edn" []
+       (edn-query-handler {:hello :cleveland}))
+
+  (PUT "/edn" [name]
+       (edn-query-handler {:hello name})))
+
 
 (defroutes query-routes
-  (POST "/query" [request]
-        (println "POST query: " request)
-        (r/response (str (edn/read-edn request)))))
+  (POST "/query" request
+        (println "POST query: " (edn/read-edn (:body request)))
+        (try
+          (r/response (edn/read-edn (:body request)))
+          (catch Exception e
+            (prn (.getMessage e))))))
 
 ;;
 ;; Custom middleware
@@ -59,12 +76,19 @@
 (defn wrap-rest [handler]
   (-> handler
       (wrap-json-response)
+      (wrap-json-body)
+      (wrap-common)))
+
+(defn wrap-edn-custom [handler]
+  (-> handler
+      (wrap-plaintext)
       (wrap-common)))
 
 (defn wrap-edn [handler]
   (-> handler
-      (wrap-edn-content)
-      (wrap-common)))
+      (wrap-edn-params)
+      (wrap-common)
+      ))
 
 ;;
 ;; Application handler
@@ -72,5 +96,6 @@
 
 (def app
   (routes (-> rest-routes (wrap-routes wrap-rest))
-          (-> query-routes (wrap-routes wrap-edn))
+          (-> query-routes (wrap-routes wrap-edn-custom))
+          (-> edn-query-handler (wrap-routes wrap-edn))
           (-> app-routes (wrap-routes wrap-app))))
